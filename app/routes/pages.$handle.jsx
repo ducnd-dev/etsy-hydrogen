@@ -31,6 +31,16 @@ async function loadCriticalData({context, request, params}) {
     throw new Error('Missing page handle');
   }
 
+  // Redirect contact page to custom contact route
+  if (params.handle === 'contact') {
+    throw new Response('', {
+      status: 302,
+      headers: {
+        Location: '/contact',
+      },
+    });
+  }
+
   const [{page}] = await Promise.all([
     context.storefront.query(PAGE_QUERY, {
       variables: {

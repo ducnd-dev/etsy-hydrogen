@@ -1,5 +1,5 @@
 import {useFetcher, useNavigate} from 'react-router';
-import React, {useRef, useEffect} from 'react';
+import {useRef, useEffect} from 'react';
 import {useAside} from './Aside';
 
 export const SEARCH_ENDPOINT = '/search';
@@ -23,6 +23,7 @@ export function SearchFormPredictive({
     event.preventDefault();
     event.stopPropagation();
     if (inputRef?.current?.value) {
+      inputRef.current.value = '';
       inputRef.current.blur();
     }
   }
@@ -30,16 +31,19 @@ export function SearchFormPredictive({
   /** Navigate to the search page with the current input value */
   function goToSearch() {
     const term = inputRef?.current?.value;
-    navigate(SEARCH_ENDPOINT + (term ? `?q=${term}` : ''));
+    navigate(SEARCH_ENDPOINT + (term ? `?q=${encodeURIComponent(term)}` : ''));
     aside.close();
   }
 
   /** Fetch search results based on the input value */
   function fetchResults(event) {
-    fetcher.submit(
-      {q: event.target.value || '', limit: 5, predictive: true},
-      {method: 'GET', action: SEARCH_ENDPOINT},
-    );
+    const term = event.target.value || '';
+    if (term.length > 2) {
+      fetcher.submit(
+        {q: term, limit: 8, predictive: true},
+        {method: 'GET', action: SEARCH_ENDPOINT},
+      );
+    }
   }
 
   // ensure the passed input has a type of search, because SearchResults

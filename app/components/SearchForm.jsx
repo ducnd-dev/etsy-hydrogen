@@ -29,9 +29,8 @@ export function SearchForm({children, ...props}) {
   if (typeof children !== 'function') {
     return null;
   }
-
   return (
-    <Form method="get" {...props}>
+    <Form method="get" action="/search" {...props}>
       {children({inputRef})}
     </Form>
   );

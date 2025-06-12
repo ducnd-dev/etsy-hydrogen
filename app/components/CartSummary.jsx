@@ -9,21 +9,35 @@ export function CartSummary({cart, layout}) {
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
 
   return (
-    <div aria-labelledby="cart-summary" className={className}>
-      <h4>Totals</h4>
-      <dl className="cart-subtotal">
-        <dt>Subtotal</dt>
-        <dd>
-          {cart.cost?.subtotalAmount?.amount ? (
-            <Money data={cart.cost?.subtotalAmount} />
-          ) : (
-            '-'
-          )}
-        </dd>
-      </dl>
-      <CartDiscounts discountCodes={cart.discountCodes} />
-      <CartGiftCard giftCardCodes={cart.appliedGiftCards} />
-      <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
+    <div aria-labelledby="cart-summary" className={`${className} bg-white p-6 rounded-xl border border-gray-100 shadow-sm`}>
+      <h4 className="font-serif text-xl font-semibold text-gray-800 mb-6">Order Summary</h4>
+      
+      <div className="space-y-4">
+        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+          <span className="text-gray-600">Subtotal</span>
+          <span className="font-medium text-gray-800">
+            {cart.cost?.subtotalAmount?.amount ? (
+              <Money data={cart.cost?.subtotalAmount} />
+            ) : (
+              '-'
+            )}
+          </span>
+        </div>
+        
+        <CartDiscounts discountCodes={cart.discountCodes} />
+        <CartGiftCard giftCardCodes={cart.appliedGiftCards} />
+        
+        {cart.cost?.totalAmount && (
+          <div className="flex justify-between items-center py-3 border-t border-gray-200 font-semibold text-lg">
+            <span className="text-gray-800">Total</span>
+            <span className="text-orange-500">
+              <Money data={cart.cost.totalAmount} />
+            </span>
+          </div>
+        )}
+        
+        <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
+      </div>
     </div>
   );
 }
@@ -34,11 +48,17 @@ function CartCheckoutActions({checkoutUrl}) {
   if (!checkoutUrl) return null;
 
   return (
-    <div>
-      <a href={checkoutUrl} target="_self">
-        <p>Continue to Checkout &rarr;</p>
+    <div className="pt-4">
+      <a 
+        href={checkoutUrl} 
+        target="_self"
+        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-6 rounded-full transition-colors duration-200 flex items-center justify-center space-x-2 text-center block"
+      >
+        <span>Continue to Checkout</span>
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
       </a>
-      <br />
     </div>
   );
 }
@@ -55,27 +75,46 @@ function CartDiscounts({discountCodes}) {
       ?.map(({code}) => code) || [];
 
   return (
-    <div>
+    <div className="space-y-3">
       {/* Have existing discount, display it with a remove option */}
-      <dl hidden={!codes.length}>
-        <div>
-          <dt>Discount(s)</dt>
-          <UpdateDiscountForm>
-            <div className="cart-discount">
-              <code>{codes?.join(', ')}</code>
-              &nbsp;
-              <button>Remove</button>
+      {codes.length > 0 && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+          <div className="flex justify-between items-center">
+            <div>
+              <span className="text-sm font-medium text-green-700">Discount Applied</span>
+              <div className="text-sm text-green-600 font-mono">{codes.join(', ')}</div>
             </div>
-          </UpdateDiscountForm>
+            <UpdateDiscountForm>
+              <button 
+                type="submit"
+                className="text-green-600 hover:text-green-700 text-sm underline"
+              >
+                Remove
+              </button>
+            </UpdateDiscountForm>
+          </div>
         </div>
-      </dl>
-
-      {/* Show an input to apply a discount */}
+      )}      {/* Show an input to apply a discount */}
       <UpdateDiscountForm discountCodes={codes}>
-        <div>
-          <input type="text" name="discountCode" placeholder="Discount code" />
-          &nbsp;
-          <button type="submit">Apply</button>
+        <div className="space-y-2">
+          <label htmlFor="discountCode" className="block text-sm font-medium text-gray-700">
+            Discount Code
+          </label>
+          <div className="flex space-x-2">
+            <input 
+              type="text" 
+              id="discountCode"
+              name="discountCode" 
+              placeholder="Enter code" 
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+            />
+            <button 
+              type="submit"
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+            >
+              Apply
+            </button>
+          </div>
         </div>
       </UpdateDiscountForm>
     </div>
@@ -118,7 +157,9 @@ function CartGiftCard({giftCardCodes}) {
     if (!appliedGiftCardCodes.current.includes(formattedCode)) {
       appliedGiftCardCodes.current.push(formattedCode);
     }
-    giftCardCodeInput.current.value = '';
+    if (giftCardCodeInput.current) {
+      giftCardCodeInput.current.value = '';
+    }
   }
 
   function removeAppliedCode() {
@@ -126,35 +167,53 @@ function CartGiftCard({giftCardCodes}) {
   }
 
   return (
-    <div>
+    <div className="space-y-3">
       {/* Have existing gift card applied, display it with a remove option */}
-      <dl hidden={!codes.length}>
-        <div>
-          <dt>Applied Gift Card(s)</dt>
-          <UpdateGiftCardForm>
-            <div className="cart-discount">
-              <code>{codes?.join(', ')}</code>
-              &nbsp;
-              <button onSubmit={() => removeAppliedCode}>Remove</button>
+      {codes.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex justify-between items-center">
+            <div>
+              <span className="text-sm font-medium text-blue-700">Gift Card Applied</span>
+              <div className="text-sm text-blue-600 font-mono">{codes.join(', ')}</div>
             </div>
-          </UpdateGiftCardForm>
+            <UpdateGiftCardForm>
+              <button 
+                type="submit"
+                onClick={removeAppliedCode}
+                className="text-blue-600 hover:text-blue-700 text-sm underline"
+              >
+                Remove
+              </button>
+            </UpdateGiftCardForm>
+          </div>
         </div>
-      </dl>
+      )}
 
-      {/* Show an input to apply a discount */}
+      {/* Show an input to apply a gift card */}
       <UpdateGiftCardForm
         giftCardCodes={appliedGiftCardCodes.current}
         saveAppliedCode={saveAppliedCode}
       >
-        <div>
-          <input
-            type="text"
-            name="giftCardCode"
-            placeholder="Gift card code"
-            ref={giftCardCodeInput}
-          />
-          &nbsp;
-          <button type="submit">Apply</button>
+        <div className="space-y-2">
+          <label htmlFor="giftCardCode" className="block text-sm font-medium text-gray-700">
+            Gift Card Code
+          </label>
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              id="giftCardCode"
+              name="giftCardCode"
+              placeholder="Enter gift card code"
+              ref={giftCardCodeInput}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+            />
+            <button 
+              type="submit"
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+            >
+              Apply
+            </button>
+          </div>
         </div>
       </UpdateGiftCardForm>
     </div>
@@ -179,8 +238,8 @@ function UpdateGiftCardForm({giftCardCodes, saveAppliedCode, children}) {
       }}
     >
       {(fetcher) => {
-        const code = fetcher.formData?.get('giftCardCode');
-        if (code && saveAppliedCode) {
+        const code = fetcher?.formData?.get('giftCardCode');
+        if (code && saveAppliedCode && typeof saveAppliedCode === 'function') {
           saveAppliedCode(code);
         }
         return children;

@@ -4,6 +4,88 @@ import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
+import {ProductFilter} from '~/components/ProductFilter';
+import {ActiveFilterTags} from '~/components/ActiveFilterTags';
+import {ProductListHeader, QuickFilterBar} from '~/components/ProductListHeader';
+
+/**
+ * Convert URL search params to Shopify product filters
+ * @param {URLSearchParams} searchParams
+ * @returns {Array}
+ */
+function buildShopifyFilters(searchParams) {
+  const filters = [];
+  
+  // Price filter
+  const price = searchParams.get('price');
+  if (price) {
+    const priceMap = {
+      'under-25': { price: { max: 25.0 } },
+      '25-50': { price: { min: 25.0, max: 50.0 } },
+      '50-100': { price: { min: 50.0, max: 100.0 } },
+      '100-200': { price: { min: 100.0, max: 200.0 } },
+      'over-200': { price: { min: 200.0 } },
+    };
+    if (priceMap[price]) {
+      filters.push(priceMap[price]);
+    }
+  }
+  
+  // Availability filter
+  const availability = searchParams.get('availability');
+  if (availability === 'in-stock') {
+    filters.push({ available: true });
+  } else if (availability === 'out-of-stock') {
+    filters.push({ available: false });
+  }
+    // Product type filter - try both productType and tag
+  const productType = searchParams.get('type');
+  if (productType) {
+    // First try as productType
+    filters.push({ productType });
+    // Also try as tag for better matching
+    filters.push({ tag: productType });
+  }
+  
+  // Color filter
+  const color = searchParams.get('color');
+  if (color) {
+    filters.push({ tag: color });
+  }
+  
+  // Material filter
+  const material = searchParams.get('material');
+  if (material) {
+    filters.push({ tag: material });
+  }
+  
+  // Vendor filter
+  const vendor = searchParams.get('vendor');
+  if (vendor) {
+    filters.push({ productVendor: vendor });
+  }
+  
+  return filters;
+}
+
+/**
+ * Convert sort parameter to Shopify sort format
+ * @param {string} sort
+ * @returns {Object}
+ */
+function buildSortKey(sort) {
+  const sortMap = {
+    'featured': { sortKey: 'MANUAL', reverse: false },
+    'price-low-high': { sortKey: 'PRICE', reverse: false },
+    'price-high-low': { sortKey: 'PRICE', reverse: true },
+    'newest': { sortKey: 'CREATED', reverse: true },
+    'best-selling': { sortKey: 'BEST_SELLING', reverse: false },
+    'alpha-asc': { sortKey: 'TITLE', reverse: false },
+    'alpha-desc': { sortKey: 'TITLE', reverse: true },
+  };
+  
+  return sortMap[sort] || sortMap['featured'];
+}
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -37,13 +119,27 @@ async function loadCriticalData({context, params, request}) {
     pageBy: 8,
   });
 
+  // Parse URL search params for filters
+  const url = new URL(request.url);
+  const searchParams = url.searchParams;
+  
+  // Build Shopify filters from URL params
+  const filters = buildShopifyFilters(searchParams);
+  const sortKey = buildSortKey(searchParams.get('sort') || 'featured');
+
   if (!handle) {
     throw redirect('/collections');
   }
 
   const [{collection}] = await Promise.all([
     storefront.query(COLLECTION_QUERY, {
-      variables: {handle, ...paginationVariables},
+      variables: {
+        handle, 
+        ...paginationVariables,
+        filters,
+        sortKey: sortKey.sortKey,
+        reverse: sortKey.reverse,
+      },
       // Add other queries here, so that they are loaded in parallel
     }),
   ]);
@@ -68,38 +164,83 @@ async function loadCriticalData({context, params, request}) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  * @param {LoaderFunctionArgs}
  */
-function loadDeferredData({context}) {
+function loadDeferredData() {
   return {};
 }
 
 export default function Collection() {
   /** @type {LoaderReturnData} */
-  const {collection} = useLoaderData();
+  const {collection} = useLoaderData();  const handleFilterChange = () => {
+    // Filters are handled by URL search params automatically
+    // Could add analytics tracking here if needed
+  };
 
   return (
-    <div className="collection">
-      <h1>{collection.title}</h1>
-      <p className="collection-description">{collection.description}</p>
-      <PaginatedResourceSection
-        connection={collection.products}
-        resourcesClassName="products-grid"
-      >
-        {({node: product, index}) => (
-          <ProductItem
-            key={product.id}
-            product={product}
-            loading={index < 8 ? 'eager' : undefined}
-          />
-        )}
-      </PaginatedResourceSection>
-      <Analytics.CollectionView
-        data={{
-          collection: {
-            id: collection.id,
-            handle: collection.handle,
-          },
-        }}
-      />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Collection Header */}
+        <div className="mb-8">
+          <h1 className="font-serif text-3xl font-bold text-gray-900 mb-2">
+            {collection.title}
+          </h1>
+          {collection.description && (
+            <p className="text-gray-600 max-w-2xl">
+              {collection.description}
+            </p>
+          )}
+        </div>
+
+        <div className="lg:grid lg:grid-cols-4 lg:gap-8">
+          {/* Filter Sidebar */}
+          <div className="lg:col-span-1 mb-8 lg:mb-0">
+            <ProductFilter 
+              onFilterChange={handleFilterChange}
+              className="sticky top-8"
+            />
+          </div>          {/* Products Grid */}
+          <div className="lg:col-span-3">
+            {/* Active Filter Tags */}
+            <div className="mb-6">
+              <ActiveFilterTags />
+            </div>
+
+            {/* Quick Filter Bar */}
+            <div className="mb-6">
+              <QuickFilterBar />
+            </div>
+
+            {/* Products Count & Sort */}
+            <div className="mb-6">
+              <ProductListHeader 
+                totalCount={collection.products.nodes.length}
+              />
+            </div>
+
+            {/* Products Grid */}
+            <PaginatedResourceSection
+              connection={collection.products}
+              resourcesClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {({node: product, index}) => (
+                <ProductItem
+                  key={product.id}
+                  product={product}
+                  loading={index < 8 ? 'eager' : undefined}
+                />
+              )}
+            </PaginatedResourceSection>
+          </div>
+        </div>
+
+        <Analytics.CollectionView
+          data={{
+            collection: {
+              id: collection.id,
+              handle: collection.handle,
+            },
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -142,6 +283,9 @@ const COLLECTION_QUERY = `#graphql
     $last: Int
     $startCursor: String
     $endCursor: String
+    $filters: [ProductFilter!]
+    $sortKey: ProductCollectionSortKeys
+    $reverse: Boolean
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -152,7 +296,10 @@ const COLLECTION_QUERY = `#graphql
         first: $first,
         last: $last,
         before: $startCursor,
-        after: $endCursor
+        after: $endCursor,
+        filters: $filters,
+        sortKey: $sortKey,
+        reverse: $reverse
       ) {
         nodes {
           ...ProductItem

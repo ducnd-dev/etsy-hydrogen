@@ -1,11 +1,52 @@
-:root {
-  --aside-width: 400px;
-  --cart-aside-summary-height-with-discount: 300px;
-  --cart-aside-summary-height: 250px;
-  --grid-item-width: 355px;
-  --header-height: 64px;
-  --color-dark: #000;
-  --color-light: #fff;
+/* Import Google Fonts for Etsy-like typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --aside-width: 400px;
+    --cart-aside-summary-height-with-discount: 300px;
+    --cart-aside-summary-height: 250px;
+    --grid-item-width: 355px;
+    --header-height: 64px;
+    --color-dark: #000;
+    --color-light: #fff;
+    --etsy-orange: #ff6900;
+    --etsy-orange-hover: #e55a00;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .font-serif {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .font-sans {
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .etsy-card {
+    @apply bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow duration-200;
+  }
+
+  .etsy-button-primary {
+    @apply bg-orange-500 hover:bg-orange-600 text-white py-2 px-6 rounded-full font-medium transition-colors duration-200;
+  }
+
+  .etsy-button-secondary {
+    @apply bg-white border border-gray-300 hover:border-gray-400 text-gray-700 py-2 px-6 rounded-full font-medium transition-colors duration-200;
+  }
+
+  .etsy-search-input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent;
+  }
 }
 
 img {

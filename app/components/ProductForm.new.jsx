@@ -1,5 +1,4 @@
 import {Link, useNavigate} from 'react-router';
-import {useState} from 'react';
 import {AddToCartButton} from './AddToCartButton';
 import {useAside} from './Aside';
 
@@ -12,29 +11,9 @@ import {useAside} from './Aside';
 export function ProductForm({productOptions, selectedVariant}) {
   const navigate = useNavigate();
   const {open} = useAside();
-  const [quantity, setQuantity] = useState(1);
-  
-  // Check if we have any options to display
-  const hasOptions = productOptions && productOptions.some(option => option.optionValues.length > 1);
-
-  const handleQuantityChange = (newQuantity) => {
-    if (newQuantity >= 1 && (!selectedVariant?.quantityAvailable || newQuantity <= selectedVariant.quantityAvailable)) {
-      setQuantity(newQuantity);
-    }
-  };
-
-  const incrementQuantity = () => {
-    handleQuantityChange(quantity + 1);
-  };
-
-  const decrementQuantity = () => {
-    handleQuantityChange(quantity - 1);
-  };
-  
   return (
     <div className="space-y-6">
-      {/* Product Options */}
-      {hasOptions && productOptions.map((option) => {
+      {productOptions.map((option) => {
         // If there is only a single value in the option values, don't display the option
         if (option.optionValues.length === 1) return null;
 
@@ -119,37 +98,26 @@ export function ProductForm({productOptions, selectedVariant}) {
           </div>
         );
       })}
-        {/* Quantity Selector */}
+      
+      {/* Quantity Selector */}
       <div className="space-y-3">
         <h3 className="font-medium text-gray-900 text-sm uppercase tracking-wide">
           Quantity
         </h3>
         <div className="flex items-center space-x-3">
           <div className="flex items-center border border-gray-300 rounded-lg">
-            <button 
-              type="button"
-              onClick={decrementQuantity}
-              disabled={quantity <= 1}
-              className="p-2 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button className="p-2 hover:bg-gray-50 transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
               </svg>
             </button>
             <input 
               type="number" 
-              value={quantity}
-              onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+              defaultValue="1" 
               min="1" 
-              max={selectedVariant?.quantityAvailable || 99}
               className="w-16 text-center border-0 focus:ring-0 focus:outline-none"
             />
-            <button 
-              type="button"
-              onClick={incrementQuantity}
-              disabled={selectedVariant?.quantityAvailable && quantity >= selectedVariant.quantityAvailable}
-              className="p-2 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button className="p-2 hover:bg-gray-50 transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -159,17 +127,19 @@ export function ProductForm({productOptions, selectedVariant}) {
             {selectedVariant?.quantityAvailable ? `Only ${selectedVariant.quantityAvailable} left` : ''}
           </span>
         </div>
-      </div>      {/* Add to Cart Button */}
+      </div>
+
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
           open('cart');
-        }}        lines={
+        }}
+        lines={
           selectedVariant
             ? [
                 {
                   merchandiseId: selectedVariant.id,
-                  quantity,
+                  quantity: 1,
                   selectedVariant,
                 },
               ]

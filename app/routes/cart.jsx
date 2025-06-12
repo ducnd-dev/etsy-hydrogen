@@ -112,9 +112,19 @@ export default function Cart() {
   const cart = useLoaderData();
 
   return (
-    <div className="cart">
-      <h1>Cart</h1>
-      <CartMain layout="page" cart={cart} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="font-serif text-3xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
+          <p className="text-gray-600">Review your items before checkout</p>
+        </div>
+        
+        {/* Cart Content */}
+        <div className="bg-white rounded-xl shadow-sm">
+          <CartMain layout="page" cart={cart} />
+        </div>
+      </div>
     </div>
   );
 }
