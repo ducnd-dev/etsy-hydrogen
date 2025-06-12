@@ -7,10 +7,11 @@ import {useRef} from 'react';
 export function CartSummary({cart, layout}) {
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
+  const paddingClass = layout === 'page' ? 'p-6' : 'p-0'; // Remove extra padding for aside layout
 
   return (
-    <div aria-labelledby="cart-summary" className={`${className} bg-white p-6 rounded-xl border border-gray-100 shadow-sm`}>
-      <h4 className="font-serif text-xl font-semibold text-gray-800 mb-6">Order Summary</h4>
+    <div aria-labelledby="cart-summary" className={`${className} bg-white ${paddingClass} rounded-xl border border-gray-100 shadow-sm`}>
+      <h4 className={`font-serif ${layout === 'page' ? 'text-xl' : 'text-lg'} font-semibold text-gray-800 mb-4`}>Order Summary</h4>
       
       <div className="space-y-4">
         <div className="flex justify-between items-center py-2 border-b border-gray-100">
@@ -106,7 +107,7 @@ function CartDiscounts({discountCodes}) {
               id="discountCode"
               name="discountCode" 
               placeholder="Enter code" 
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+              className="flex-1 px-3 w-full py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
             />
             <button 
               type="submit"
@@ -205,7 +206,7 @@ function CartGiftCard({giftCardCodes}) {
               name="giftCardCode"
               placeholder="Enter gift card code"
               ref={giftCardCodeInput}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+              className="flex-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
             />
             <button 
               type="submit"

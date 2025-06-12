@@ -41,15 +41,12 @@ export function CartMain({layout, cart: originalCart}) {
         )}
       </div>
     );
-  }
-
-  // Sidebar layout (original)
+  }  // Sidebar layout (original)
   return (
     <div className="h-full flex flex-col">
       <CartEmpty hidden={cartHasItems} layout={layout} />
         {cartHasItems && (
-        <>
-          <div className="flex-1 overflow-y-auto">
+        <>          <div className="flex-1 overflow-y-auto min-h-0" style={{maxHeight: 'calc(100vh - 520px)'}}>
             <div className="p-4">
               <div className="space-y-4">
                 {(cart?.lines?.nodes ?? []).map((line) => (
@@ -57,15 +54,14 @@ export function CartMain({layout, cart: originalCart}) {
                 ))}
               </div>
             </div>
+            
+            {layout === 'aside' && (
+              <div className="p-4 border-t border-gray-100">
+                <ViewFullCartLink />
+              </div>
+            )}
           </div>
-          
-          {layout === 'aside' && (
-            <div className="p-4 border-t border-gray-100">
-              <ViewFullCartLink />
-            </div>
-          )}
-          
-          <div className="border-t bg-white">
+            <div className="flex-shrink-0 border-t bg-white" style={{minHeight: '350px'}}>
             <CartSummary cart={cart} layout={layout} />
           </div>
         </>
